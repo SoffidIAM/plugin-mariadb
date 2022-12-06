@@ -295,9 +295,11 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 	private void updateRoles(Connection sqlConnection, String user, Collection<RoleGrant> roles, Account account) throws SQLException, InternalErrorException, UnknownRoleException {
 		roles = new LinkedList(roles);
 		HashSet<String> granted = new HashSet<String>();
+		String[] userSplit = splitUserName(user);
 		try (PreparedStatement stmt = sqlConnection
-				.prepareStatement(sentence("select Role from mysql.role_mappings where User=?"))) {
-			stmt.setString(1, user);
+				.prepareStatement(sentence("select Role from mysql.roles_mapping where User=? and Host=?"))) {
+			stmt.setString(1, userSplit[0]);
+			stmt.setString(2, userSplit[1]);
 			
 			try (ResultSet rset = stmt.executeQuery()) {
 				while (rset.next())
@@ -318,7 +320,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 							runTriggers(SoffidObjectType.OBJECT_GRANTED_ROLE, SoffidObjectTrigger.PRE_INSERT, new GrantExtensibleObject(r, getServer()))) 
 				{
 					try (Statement stmt2 = sqlConnection.createStatement()) {
-						stmt2.execute("GRANT `" + r.getRoleName() + "` TO  `" + user + "`"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						stmt2.execute(sentence("GRANT `" + r.getRoleName() + "` TO  `" + user + "`")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					}
 					boolean ok = runTriggers(SoffidObjectType.OBJECT_GRANT, SoffidObjectTrigger.POST_INSERT, new GrantExtensibleObject(r, getServer())) &&
 							runTriggers(SoffidObjectType.OBJECT_ALL_GRANTED_GROUP, SoffidObjectTrigger.POST_INSERT, new GrantExtensibleObject(r, getServer())) &&
@@ -373,7 +375,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 						// Password protected or not
 						String command = "CREATE ROLE `" + r.getRoleName() + "`"; //$NON-NLS-1$ //$NON-NLS-2$
 						try (Statement stmt2 =  sqlConnection.createStatement()) {
-							stmt2.execute(sentence(command));
+							stmt2.execute(sentence(sentence(command)));
 						}
 						runTriggers(SoffidObjectType.OBJECT_ROLE, SoffidObjectTrigger.POST_INSERT, new com.soffid.iam.sync.engine.extobj.RoleExtensibleObject(role, getServer()));
 					} else {
@@ -725,7 +727,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 					runTriggers(SoffidObjectType.OBJECT_GRANTED_GROUP, SoffidObjectTrigger.PRE_DELETE, new GrantExtensibleObject(r, getServer())) &&
 					runTriggers(SoffidObjectType.OBJECT_GRANTED_ROLE, SoffidObjectTrigger.PRE_DELETE, new GrantExtensibleObject(r, getServer()))) 
 			{
-				stmt2.execute("REVOKE \"" + role + "\" FROM \"" + accountName + "\""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				stmt2.execute(sentence("REVOKE `" + role + "` FROM `" + accountName + "`")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				boolean ok = runTriggers(SoffidObjectType.OBJECT_GRANT, SoffidObjectTrigger.POST_DELETE, new GrantExtensibleObject(r, getServer())) &&
 						runTriggers(SoffidObjectType.OBJECT_ALL_GRANTED_GROUP, SoffidObjectTrigger.POST_DELETE, new GrantExtensibleObject(r, getServer())) &&
 						runTriggers(SoffidObjectType.OBJECT_ALL_GRANTED_ROLES, SoffidObjectTrigger.POST_DELETE, new GrantExtensibleObject(r, getServer())) &&
@@ -864,7 +866,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 			Connection sqlConnection = getConnection();
 
 			stmt = sqlConnection
-					.prepareStatement(sentence("SELECT User, Host from mysql.user")); //$NON-NLS-1$
+					.prepareStatement(sentence("SELECT User, Host from mysql.user where is_role='N'")); //$NON-NLS-1$
 			rset = stmt.executeQuery();
 			// Determinar si el usuario está o no activo
 			// Si no existe darlo de alta
@@ -921,7 +923,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 				account.setName(userAccount);
 				account.setDescription(userAccount);
 				account.setSystem(getAgentName());
-				account.setDisabled(! rset.getBoolean(2));
+//				account.setDisabled(! rset.getBoolean(2));
 				return account;
 			}
 
@@ -954,17 +956,65 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 	public List<String> getRolesList() throws RemoteException,
 			InternalErrorException {
 		LinkedList<String> roles = new LinkedList<String>();
+
+		try {
+			Connection sqlConnection = getConnection();
+
+			try ( PreparedStatement stmt = sqlConnection
+					.prepareStatement(sentence("SELECT User from mysql.user where is_role='Y'"))) {
+				try (ResultSet rset = stmt.executeQuery()) {
+					while (rset.next()) {
+						roles.add(rset.getString(1));
+					}
+				}
+			}
+
+		} catch (SQLException e) {
+			handleSQLException(e);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new InternalErrorException(
+					Messages.getString("MariadbAgent.ErrorUpdatingUser"), e); //$NON-NLS-1$
+		} finally {
+		}
 		return roles;
 	}
 
 	public Role getRoleFullInfo(String roleName) throws RemoteException,
 			InternalErrorException {
-		return null;
+		Role r = new Role();
+		r.setName(roleName);
+		r.setDescription(roleName);
+		return r;
 	}
 
 	public List<RoleGrant> getAccountGrants(String userAccount)
 			throws RemoteException, InternalErrorException {
+		String[] userSplit = splitUserName(user);
 		LinkedList<RoleGrant> roles = new LinkedList<RoleGrant>();
+		try {
+			Connection sqlConnection = getConnection();
+			try (PreparedStatement stmt = sqlConnection
+					.prepareStatement(sentence("select Role from mysql.roles_mapping where User=? and Host=?"))) {
+				stmt.setString(1, userSplit[0]);
+				stmt.setString(2, userSplit[1]);
+				
+				try (ResultSet rset = stmt.executeQuery()) {
+					while (rset.next()) {
+						RoleGrant rg = new RoleGrant();
+						rg.setOwnerAccountName(userAccount);
+						rg.setOwnerSystem(getAgentName());
+						rg.setRoleName(rset.getString(1));
+						rg.setSystem(getAgentName());
+						roles.add(rg);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			handleSQLException(e);
+		} finally {
+			releaseConnection();
+		}
 		return roles;
 	}
 	
