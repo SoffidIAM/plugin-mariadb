@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<seuServerPlugin xmlns="http://seu.sourceforge.net/schema/serverplugin"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://seu.sourceforge.net/schema/ServerPlugin.xsd">
+	<name>Postgresql plugin</name>
+	<version>${pom.version}</version>
+	<agent>
+		<name>Postgresql agent</name>
+		<javaClass>com.soffid.iam.agent.mariadb.MariadbAgent</javaClass>
+		<userInterface>MariadbAgent.zul</userInterface>
+		<enableAccessControl>false</enableAccessControl>
+		<enableAttributeMapping>true</enableAttributeMapping>
+		<enableObjectTriggers>true</enableObjectTriggers>
+		<object systemObject="user-out" soffidObject="user">
+		</object>
+
+		<object systemObject="user-in" soffidObject="account">
+		</object>
+	</agent>
+</seuServerPlugin>
