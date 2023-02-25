@@ -990,7 +990,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 
 	public List<RoleGrant> getAccountGrants(String userAccount)
 			throws RemoteException, InternalErrorException {
-		String[] userSplit = splitUserName(user);
+		String[] userSplit = splitUserName(userAccount);
 		LinkedList<RoleGrant> roles = new LinkedList<RoleGrant>();
 		try {
 			Connection sqlConnection = getConnection();
