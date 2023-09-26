@@ -3,11 +3,24 @@
 <seuServerPlugin xmlns="http://seu.sourceforge.net/schema/serverplugin"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://seu.sourceforge.net/schema/ServerPlugin.xsd">
-	<name>Mariadb plugin</name>
+	<name>Mariadb &amp; Mysql plugin</name>
 	<version>${pom.version}</version>
 	<agent>
 		<name>Mariadb agent</name>
 		<javaClass>com.soffid.iam.agent.mariadb.MariadbAgent</javaClass>
+		<userInterface>MariadbAgent.zul</userInterface>
+		<enableAccessControl>false</enableAccessControl>
+		<enableAttributeMapping>true</enableAttributeMapping>
+		<enableObjectTriggers>true</enableObjectTriggers>
+		<object systemObject="user-out" soffidObject="user">
+		</object>
+
+		<object systemObject="user-in" soffidObject="account">
+		</object>
+	</agent>
+	<agent>
+		<name>Mysql agent</name>
+		<javaClass>com.soffid.iam.agent.mariadb.MysqlAgent</javaClass>
 		<userInterface>MariadbAgent.zul</userInterface>
 		<enableAccessControl>false</enableAccessControl>
 		<enableAttributeMapping>true</enableAttributeMapping>
