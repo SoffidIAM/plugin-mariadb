@@ -221,7 +221,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 			// Comprobar si el usuario existe
 			String[] userSplit = splitUserName(user);
 			stmt = sqlConnection
-					.prepareStatement(sentence("SELECT 1 FROM mysql.user WHERE User=? and Host=? and is_role='N'")); //$NON-NLS-1$
+					.prepareStatement(sentence(fetchUser())); //$NON-NLS-1$
 			stmt.setString(1, userSplit[0]);
 			stmt.setString(2, userSplit[1]);
 			rset = stmt.executeQuery();
@@ -290,6 +290,10 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 				} catch (Exception e) {
 				}
 		}
+	}
+
+	protected String fetchUser() {
+		return "SELECT 1 FROM mysql.user WHERE User=? and Host=? and is_role='N'";
 	}
 
 	private void updateRoles(Connection sqlConnection, String user, Collection<RoleGrant> roles, Account account) throws SQLException, InternalErrorException, UnknownRoleException {
@@ -365,7 +369,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 	protected void checkRoleExists(Connection sqlConnection, RoleGrant r)
 			throws SQLException, InternalErrorException, UnknownRoleException {
 		try (PreparedStatement stmt = sqlConnection
-					.prepareStatement(sentence("SELECT 1 FROM mysql.user where is_role='Y' and User=?"))) {
+					.prepareStatement(sentence(fetchRole()))) {
 			stmt.setString(1, r.getRoleName());
 			try (ResultSet rset = stmt.executeQuery()) {
 				if (!rset.next()) {
@@ -385,6 +389,10 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 				}
 			}
 		}
+	}
+
+	protected String fetchRole() {
+		return "SELECT User FROM mysql.user where is_role='Y' and User=?";
 	}
 
 	private String[] splitUserName(String user2) {
@@ -570,7 +578,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 				// Comprobar si el rol existe en la bd
 				Connection sqlConnection = getConnection();
 				stmt = sqlConnection
-						.prepareStatement(sentence("SELECT User form mysql.user where is_role='Y' and User=?")); //$NON-NLS-1$ //$NON-NLS-2$
+						.prepareStatement(sentence(fetchRole())); //$NON-NLS-1$ //$NON-NLS-2$
 				stmt.setString(1, role);
 				ResultSet rset = stmt.executeQuery();
 				if (!rset.next()) // aquest rol NO existeix com a rol de la BBDD
@@ -651,7 +659,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 				Connection sqlConnection = getConnection();
 				PreparedStatement stmt = null;
 				stmt = sqlConnection
-						.prepareStatement(sentence("SELECT 1 FROM mysql.user WHERE User=? and Host=? and is_role='N'")); //$NON-NLS-1$
+						.prepareStatement(sentence(fetchUser())); //$NON-NLS-1$
 				stmt.setString(1, userSplit[0]);
 				stmt.setString(2, userSplit[1]);
 				ResultSet rset = stmt.executeQuery();
@@ -866,7 +874,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 			Connection sqlConnection = getConnection();
 
 			stmt = sqlConnection
-					.prepareStatement(sentence("SELECT User, Host from mysql.user where is_role='N'")); //$NON-NLS-1$
+					.prepareStatement(sentence(fetchUsers())); //$NON-NLS-1$
 			rset = stmt.executeQuery();
 			// Determinar si el usuario está o no activo
 			// Si no existe darlo de alta
@@ -898,6 +906,10 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 				}
 		}
 		return accounts;
+	}
+
+	protected String fetchUsers() {
+		return "SELECT User, Host from mysql.user where is_role='N'";
 	}
 
 	public Account getAccountInfo(String userAccount) throws RemoteException,
@@ -961,7 +973,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 			Connection sqlConnection = getConnection();
 
 			try ( PreparedStatement stmt = sqlConnection
-					.prepareStatement(sentence("SELECT User from mysql.user where is_role='Y'"))) {
+					.prepareStatement(sentence(fetchRoles()))) {
 				try (ResultSet rset = stmt.executeQuery()) {
 					while (rset.next()) {
 						roles.add(rset.getString(1));
@@ -978,6 +990,10 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 		} finally {
 		}
 		return roles;
+	}
+
+	protected String fetchRoles() {
+		return "SELECT User from mysql.user where is_role='Y'";
 	}
 
 	public Role getRoleFullInfo(String roleName) throws RemoteException,

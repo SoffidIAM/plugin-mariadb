@@ -78,4 +78,24 @@ public class MysqlAgent extends MariadbAgent{
 		return conn;
 	}
 
+	@Override
+	protected String fetchUser() {
+		return "SELECT 1 FROM mysql.user WHERE User=? and Host=?";
+	}
+
+	@Override
+	protected String fetchRole() {
+		return "SELECT User FROM mysql.user where User != User and User=?";
+	}
+
+	@Override
+	protected String fetchUsers() {
+		return "SELECT User, Host from mysql.user";
+	}
+
+	@Override
+	protected String fetchRoles() {
+		return "SELECT User FROM mysql.user where User != User";
+	}
+
 }
