@@ -296,7 +296,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 		return "SELECT 1 FROM mysql.user WHERE User=? and Host=? and is_role='N'";
 	}
 
-	private void updateRoles(Connection sqlConnection, String user, Collection<RoleGrant> roles, Account account) throws SQLException, InternalErrorException, UnknownRoleException {
+	protected void updateRoles(Connection sqlConnection, String user, Collection<RoleGrant> roles, Account account) throws SQLException, InternalErrorException, UnknownRoleException {
 		roles = new LinkedList(roles);
 		HashSet<String> granted = new HashSet<String>();
 		String[] userSplit = splitUserName(user);
