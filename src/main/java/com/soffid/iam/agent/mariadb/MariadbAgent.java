@@ -255,13 +255,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 			rset.close();
 			stmt.close();
 
-			try {
-				stmt = sqlConnection
-						.prepareStatement(sentence("ALTER USER `"+ userSplit[0] + "`@`"+ userSplit[1]+ "` ACCOUNT UNLOCK")); //$NON-NLS-1$ //$NON-NLS-2$
-				stmt.execute();
-				stmt.close();
-			} catch (Exception e) { // Old version
-			}
+			stmt = unlockUser(stmt, sqlConnection, userSplit);
 
 			updateRoles(sqlConnection, user, roles, account);
 
@@ -435,7 +429,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 			Connection sqlConnection = getConnection();
 			String[] userSplit = splitUserName(user);
 			stmt = sqlConnection
-					.prepareStatement(sentence("SELECT 1 FROM mysql.user WHERE User=? and Host=? and is_user='Y")); //$NON-NLS-1$
+					.prepareStatement(sentence(fetchUser())); //$NON-NLS-1$
 			stmt.setString(1, userSplit[0]);
 			stmt.setString(2, userSplit[1]);
 			ResultSet rset = stmt.executeQuery();
@@ -454,13 +448,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 				stmt = sqlConnection.prepareStatement(sentence(cmd, password));
 				stmt.execute();
 
-				try {
-					stmt = sqlConnection
-							.prepareStatement(sentence("ALTER USER `"+ userSplit[0] + "`@`"+ userSplit[1]+ "` ACCOUNT UNLOCK")); //$NON-NLS-1$ //$NON-NLS-2$
-					stmt.execute();
-					stmt.close();
-				} catch (Exception e) { // Old version
-				}
+				stmt = unlockUser(stmt, sqlConnection, userSplit);
 
 
 				if (arg1 == null) {
@@ -490,6 +478,17 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 				} catch (Exception e) {
 				}
 		}
+	}
+
+	protected PreparedStatement unlockUser(PreparedStatement stmt, Connection sqlConnection, String[] userSplit) {
+		try {
+			stmt = sqlConnection
+					.prepareStatement(sentence("ALTER USER `"+ userSplit[0] + "`@`"+ userSplit[1]+ "` ACCOUNT UNLOCK")); //$NON-NLS-1$ //$NON-NLS-2$
+			stmt.execute();
+			stmt.close();
+		} catch (Exception e) { // Old version
+		}
+		return stmt;
 	}
 
 	/**
@@ -697,11 +696,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 			{
 				if ( runTriggers(SoffidObjectType.OBJECT_ACCOUNT, SoffidObjectTrigger.PRE_UPDATE, new AccountExtensibleObject(account, getServer())) )  {
 					Connection sqlConnection = getConnection();
-					PreparedStatement stmt = null;
-					stmt = sqlConnection
-							.prepareStatement(sentence("ALTER USER `" + userSplit[0] + "`@`" + userSplit[1] + "` ACCOUNT LOCK")); //$NON-NLS-1$ //$NON-NLS-2$
-					stmt.execute();
-					stmt.close();
+					lockAccount(userSplit, sqlConnection);
 	
 					runTriggers(SoffidObjectType.OBJECT_ACCOUNT, SoffidObjectTrigger.POST_UPDATE, new AccountExtensibleObject(account, getServer()));
 					removeRoles (sqlConnection, arg0);
@@ -712,6 +707,14 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 			throw new InternalErrorException(
 					Messages.getString("MariadbAgent.318"), e); //$NON-NLS-1$
 		}
+	}
+
+	protected void lockAccount(String[] userSplit, Connection sqlConnection) throws SQLException {
+		PreparedStatement stmt = null;
+		stmt = sqlConnection
+				.prepareStatement(sentence("ALTER USER `" + userSplit[0] + "`@`" + userSplit[1] + "` ACCOUNT LOCK")); //$NON-NLS-1$ //$NON-NLS-2$
+		stmt.execute();
+		stmt.close();
 	}
 
 	private void removeRoles(Connection sqlConnection, String accountName) throws SQLException, InternalErrorException {
@@ -817,13 +820,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 			rset.close();
 			stmt.close();
 
-			try {
-				stmt = sqlConnection
-						.prepareStatement(sentence("ALTER USER `"+ userSplit[0] + "`@`"+ userSplit[1]+ "` ACCOUNT UNLOCK")); //$NON-NLS-1$ //$NON-NLS-2$
-				stmt.execute();
-				stmt.close();
-			} catch (Exception e) { // Old version
-			}
+			stmt = unlockUser(stmt, sqlConnection, userSplit);
 
 			runTriggers(SoffidObjectType.OBJECT_USER, newObject ? SoffidObjectTrigger.POST_INSERT : SoffidObjectTrigger.POST_UPDATE, new AccountExtensibleObject(account, getServer()));
 			

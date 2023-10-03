@@ -3,6 +3,7 @@ package com.soffid.iam.agent.mariadb;
 import java.rmi.RemoteException;
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -68,5 +69,12 @@ public class MysqlAgent extends MariadbAgent{
 
 	public List<RoleGrant> getAccountGrants(String userAccount) {
 		return new LinkedList<>();
+	}
+	
+	protected PreparedStatement unlockUser(PreparedStatement stmt, Connection sqlConnection, String[] userSplit) {
+		return stmt;
+	}
+
+	protected void lockAccount(String[] userSplit, Connection sqlConnection) throws SQLException {
 	}
 }
