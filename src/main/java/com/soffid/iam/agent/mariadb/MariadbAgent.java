@@ -444,7 +444,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 						return;
 				}
 					
-				cmd = "SET PASSWORD FOR `" + userSplit[0] + "`@`" + userSplit[1] + " = PASSWORD('"+quotePassword(password)+"')"; //$NON-NLS-1$
+				cmd = "SET PASSWORD FOR `" + userSplit[0] + "`@`" + userSplit[1] + "` = PASSWORD('"+quotePassword(password)+"')"; //$NON-NLS-1$
 				stmt = sqlConnection.prepareStatement(sentence(cmd, password));
 				stmt.execute();
 
