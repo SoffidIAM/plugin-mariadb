@@ -444,7 +444,7 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 						return;
 				}
 					
-				cmd = "SET PASSWORD FOR `" + userSplit[0] + "`@`" + userSplit[1] + "` = PASSWORD('"+quotePassword(password)+"')"; //$NON-NLS-1$
+				cmd = setPasswordSentence(password, userSplit); //$NON-NLS-1$
 				stmt = sqlConnection.prepareStatement(sentence(cmd, password));
 				stmt.execute();
 
@@ -478,6 +478,10 @@ public class MariadbAgent extends Agent implements UserMgr, RoleMgr,
 				} catch (Exception e) {
 				}
 		}
+	}
+
+	protected String setPasswordSentence(Password password, String[] userSplit) {
+		return "SET PASSWORD FOR `" + userSplit[0] + "`@`" + userSplit[1] + "` = PASSWORD('"+quotePassword(password)+"')";
 	}
 
 	protected PreparedStatement unlockUser(PreparedStatement stmt, Connection sqlConnection, String[] userSplit) {

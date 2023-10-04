@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Properties;
 
 import com.soffid.iam.api.Account;
+import com.soffid.iam.api.Password;
 import com.soffid.iam.api.RoleGrant;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
@@ -77,4 +78,9 @@ public class MysqlAgent extends MariadbAgent{
 
 	protected void lockAccount(String[] userSplit, Connection sqlConnection) throws SQLException {
 	}
+	
+	protected String setPasswordSentence(Password password, String[] userSplit) {
+		return "SET PASSWORD FOR `" + userSplit[0] + "`@`" + userSplit[1] + "` = '"+quotePassword(password)+"'";
+	}
+
 }
