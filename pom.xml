@@ -10,7 +10,7 @@
   <artifactId>mariadb-plugin</artifactId>
   <packaging>jar</packaging>
   <name>Mariadb plugin</name>
-  <version>1.0.10</version>
+  <version>1.0.11-SNAPSHOT</version>
   <dependencies>
     <dependency>
  	 <groupId>com.soffid.iam.console</groupId>
@@ -31,7 +31,7 @@
   </licenses>
   <scm>
           <connection>scm:git:ssh://git@github.com/SoffidIAM/plugin-mariadb.git</connection>
-          <tag>mariadb-plugin-1.0.10</tag>
+          <tag>HEAD</tag>
   </scm>
   <build>
    <plugins>
